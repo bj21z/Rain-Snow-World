@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#13283d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="雨雪秘境">
+<title>雨雪秘境 2.1</title>
+<style>
+:root{
+  --panel:rgba(12,24,38,.48);
+  --panel-strong:rgba(8,20,33,.72);
+  --line:rgba(255,255,255,.17);
+  --text:#f7fbff;
+  --muted:rgba(240,248,255,.70);
+  --shadow:0 20px 55px rgba(0,0,0,.30);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  background:#12283d;color:var(--text)
+}
+button,input{font:inherit}
+button{cursor:pointer}
+.scene{
+  position:relative;width:100%;height:100%;overflow:hidden;
+  transition:background 1s ease
+}
+.scene.rain.day{background:linear-gradient(180deg,#43627a 0%,#718695 55%,#263f49 100%)}
+.scene.rain.sunset{background:linear-gradient(180deg,#55465f 0%,#a46d62 47%,#2b3f4a 100%)}
+.scene.rain.night{background:linear-gradient(180deg,#071522 0%,#183148 58%,#0b1b22 100%)}
+.scene.snow.day{background:linear-gradient(180deg,#91acbe 0%,#d7e5ec 58%,#f5f8fa 100%)}
+.scene.snow.sunset{background:linear-gradient(180deg,#766d89 0%,#d39a88 48%,#e8eaec 100%)}
+.scene.snow.night{background:linear-gradient(180deg,#101a2d 0%,#354960 58%,#d5e0e6 100%)}
+
+.sky-light{
+  position:absolute;left:50%;top:10%;width:min(62vw,520px);height:min(62vw,520px);
+  transform:translateX(-50%);border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.28),rgba(255,255,255,0) 68%);
+  transition:opacity 1s
+}
+.day .sky-light{opacity:.78}.sunset .sky-light{opacity:.46}.night .sky-light{opacity:.14}
+
+.moon{
+  position:absolute;right:9%;top:12%;width:64px;height:64px;border-radius:50%;
+  background:#f4f1d7;box-shadow:0 0 45px rgba(241,248,255,.55);
+  opacity:0;transition:opacity 1s
+}
+.night .moon{opacity:.95}
+
+.stars{position:absolute;inset:0;opacity:0;transition:opacity 1s}
+.night .stars{opacity:.9}
+.star{position:absolute;width:2px;height:2px;border-radius:50%;background:white;animation:twinkle 2.6s infinite alternate}
+@keyframes twinkle{to{opacity:.25;transform:scale(.7)}}
+
+.cloud{
+  position:absolute;top:15%;left:-30%;width:46%;height:10%;min-height:65px;
+  border-radius:999px;background:rgba(31,45,58,.82);
+  box-shadow:75px 10px 0 7px rgba(31,45,58,.80),145px -3px 0 2px rgba(31,45,58,.74);
+  animation:cloudMove 27s linear infinite;transition:background 1s,box-shadow 1s
+}
+.cloud.two{top:25%;left:34%;transform:scale(.72);animation-duration:36s;animation-delay:-14s;opacity:.72}
+.snow .cloud{
+  background:rgba(225,235,241,.76);
+  box-shadow:75px 10px 0 7px rgba(225,235,241,.72),145px -3px 0 2px rgba(225,235,241,.68)
+}
+.night.snow .cloud{
+  background:rgba(128,145,162,.56);
+  box-shadow:75px 10px 0 7px rgba(128,145,162,.54),145px -3px 0 2px rgba(128,145,162,.50)
+}
+@keyframes cloudMove{from{transform:translateX(-20vw)}to{transform:translateX(135vw)}}
+
+.mountains{position:absolute;left:0;right:0;bottom:18%;height:40%}
+.mountain{position:absolute;bottom:0;width:58%;height:90%;clip-path:polygon(50% 0,100% 100%,0 100%);transition:background 1s}
+.m1{left:-18%;height:74%}.m2{left:18%;height:100%}.m3{right:-15%;height:76%}
+.rain .mountain{background:linear-gradient(135deg,#334a55,#13252c)}
+.night.rain .mountain{background:linear-gradient(135deg,#1c3039,#09161b)}
+.snow .mountain{background:linear-gradient(135deg,#e6eef2,#97acb6)}
+.snow .m2{background:linear-gradient(135deg,#f5f8fa 0 38%,#a5b8c1 39% 100%)}
+.night.snow .mountain{background:linear-gradient(135deg,#a8b8c3,#3a4e5d)}
+
+.ground{
+  position:absolute;left:-5%;right:-5%;bottom:-3%;height:29%;
+  border-radius:50% 50% 0 0/20% 20% 0 0;transition:background 1s
+}
+.rain .ground{background:linear-gradient(180deg,#172a30,#0a171a)}
+.snow .ground{background:linear-gradient(180deg,#fbfdfe,#cbd9df)}
+.night.snow .ground{background:linear-gradient(180deg,#dce6eb,#91a2ad)}
+
+.cabin{
+  position:absolute;left:50%;bottom:18%;width:150px;height:105px;transform:translateX(-50%);
+  background:#73462a;border-radius:5px;box-shadow:0 12px 32px rgba(0,0,0,.32)
+}
+.roof{
+  position:absolute;left:-18px;top:-46px;width:186px;height:59px;
+  clip-path:polygon(50% 0,100% 100%,0 100%);background:#38231e;transition:background 1s
+}
+.snow .roof{background:linear-gradient(160deg,#f8fbfc 0 40%,#5b4037 41% 100%)}
+.window{
+  position:absolute;width:37px;height:37px;top:31px;background:#ffd27a;
+  border:5px solid #55311e;box-shadow:0 0 28px rgba(255,204,102,.58)
+}
+.w1{left:21px}.w2{right:21px}
+.door{position:absolute;left:57px;bottom:0;width:36px;height:57px;background:#48291a}
+.chimney{position:absolute;right:24px;top:-42px;width:16px;height:38px;background:#4d332b;z-index:-1}
+
+.smoke{
+  position:absolute;left:58%;bottom:47%;width:15px;height:15px;border-radius:50%;
+  background:rgba(235,239,242,.62);
+  box-shadow:12px -18px 0 6px rgba(235,239,242,.4),-2px -40px 0 10px rgba(235,239,242,.23);
+  animation:smoke 4s ease-in-out infinite
+}
+@keyframes smoke{
+  0%{transform:translate(0,0) scale(.7);opacity:0}
+  30%{opacity:.8}
+  100%{transform:translate(24px,-72px) scale(1.55);opacity:0}
+}
+
+.particles{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.drop,.flake{position:absolute;top:-12%;animation-timing-function:linear;animation-iteration-count:infinite}
+.drop{
+  width:2px;height:25px;border-radius:99px;
+  background:linear-gradient(transparent,rgba(205,231,248,.95));
+  transform:rotate(10deg);animation-name:rainFall
+}
+.flake{
+  color:#fff;text-shadow:0 0 8px rgba(255,255,255,.8);
+  animation-name:snowFall
+}
+@keyframes rainFall{to{transform:translate(14vw,120vh) rotate(10deg)}}
+@keyframes snowFall{
+  0%{transform:translate(0,-10vh) rotate(0)}
+  50%{transform:translate(28px,55vh) rotate(180deg)}
+  100%{transform:translate(-18px,115vh) rotate(360deg)}
+}
+
+.lightning{position:absolute;inset:0;background:#d9edff;opacity:0;pointer-events:none}
+.rain.flash .lightning{animation:flash .5s ease}
+@keyframes flash{0%,100%{opacity:0}15%{opacity:.42}28%{opacity:.04}42%{opacity:.28}}
+
+.top-panel,.bottom-panel{
+  position:absolute;z-index:20;left:50%;transform:translateX(-50%);
+  width:min(94%,620px);border:1px solid var(--line);
+  background:var(--panel);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  box-shadow:var(--shadow)
+}
+.top-panel{
+  top:calc(env(safe-area-inset-top) + 13px);padding:14px;border-radius:24px
+}
+.bottom-panel{
+  bottom:calc(env(safe-area-inset-bottom) + 13px);padding:12px;border-radius:22px;
+  background:var(--panel-strong)
+}
+.header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:11px}
+.header h1{font-size:19px}.header p{font-size:12px;color:var(--muted);margin-top:3px}
+.icon-btn{
+  width:42px;height:42px;border-radius:14px;border:1px solid var(--line);
+  background:rgba(255,255,255,.08);color:white;font-size:19px
+}
+.segment{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.segment.time{grid-template-columns:repeat(3,1fr);margin-top:7px}
+.segment button{
+  border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:10px 7px;
+  background:rgba(255,255,255,.065);color:white;font-weight:750
+}
+.segment button.active{background:rgba(255,255,255,.9);color:#173047}
+
+.now{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.now-title{font-size:14px;font-weight:800}
+.now-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.play{
+  min-width:106px;border:0;border-radius:14px;padding:11px 13px;
+  background:rgba(255,255,255,.9);color:#173047;font-weight:850
+}
+.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:9px}
+.tool{
+  border:1px solid var(--line);border-radius:13px;padding:9px 5px;
+  background:rgba(255,255,255,.07);color:white;font-size:12px
+}
+
+.drawer{display:none;margin-top:8px}
+.drawer.open{display:block}
+.track{
+  display:grid;grid-template-columns:78px 44px 1fr;gap:8px;align-items:center;
+  padding:7px 0;border-top:1px solid rgba(255,255,255,.08)
+}
+.track label{font-size:12px}
+.toggle{
+  border:1px solid var(--line);border-radius:10px;padding:7px 5px;
+  background:rgba(255,255,255,.08);color:white;font-size:12px
+}
+.toggle.on{background:rgba(255,255,255,.86);color:#173047}
+.track input{width:100%;accent-color:#fff}
+
+.timer{
+  display:none;margin-top:8px;padding:10px;border-radius:15px;
+  background:rgba(255,255,255,.06);text-align:center
+}
+.timer.open{display:block}
+.timer-display{font-size:28px;font-weight:850;font-variant-numeric:tabular-nums;margin:5px}
+.timer-actions{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.timer-actions button{
+  border:1px solid var(--line);border-radius:10px;padding:7px 9px;
+  background:rgba(255,255,255,.08);color:white
+}
+
+.notice{
+  position:absolute;z-index:30;left:50%;top:48%;
+  transform:translate(-50%,-50%) scale(.94);
+  max-width:82%;padding:13px 17px;border-radius:16px;
+  background:rgba(5,16,27,.8);border:1px solid var(--line);
+  backdrop-filter:blur(14px);text-align:center;
+  opacity:0;pointer-events:none;transition:.3s
+}
+.notice.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+
+@media(max-width:520px){
+  .top-panel,.bottom-panel{width:calc(100% - 16px)}
+  .cabin{width:128px;height:92px}
+  .roof{width:158px;left:-15px}
+  .door{left:47px}.window{width:32px;height:32px;top:28px}
+  .mountains{bottom:18%;height:33%}
+}
+@media(max-height:700px){
+  .top-panel{top:calc(env(safe-area-inset-top) + 6px);padding:10px}
+  .bottom-panel{bottom:calc(env(safe-area-inset-bottom) + 6px);padding:9px}
+  .header{margin-bottom:7px}.segment button{padding:8px 6px}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms!important;animation-iteration-count:1!important}
+}
+</style>
+</head>
+<body>
+<main class="scene rain night" id="scene">
+  <div class="sky-light"></div>
+  <div class="moon"></div>
+  <div class="stars" id="stars"></div>
+  <div class="cloud"></div>
+  <div class="cloud two"></div>
+  <div class="lightning"></div>
+
+  <div class="mountains">
+    <div class="mountain m1"></div>
+    <div class="mountain m2"></div>
+    <div class="mountain m3"></div>
+  </div>
+
+  <div class="ground"></div>
+
+  <div class="cabin">
+    <div class="chimney"></div>
+    <div class="roof"></div>
+    <div class="window w1"></div>
+    <div class="window w2"></div>
+    <div class="door"></div>
+  </div>
+  <div class="smoke"></div>
+
+  <div class="particles" id="particles"></div>
+
+  <section class="top-panel">
+    <div class="header">
+      <div>
+        <h1>雨雪秘境 2.1</h1>
+        <p id="sceneText">雨夜山居 · 沉浸式环境空间</p>
+      </div>
+      <button class="icon-btn" id="muteBtn" type="button" aria-label="静音">🔊</button>
+    </div>
+
+    <div class="segment">
+      <button id="rainBtn" class="active" type="button">🌧️ 雨景</button>
+      <button id="snowBtn" type="button">❄️ 雪景</button>
+    </div>
+
+    <div class="segment time">
+      <button id="dayBtn" type="button">☀️ 白天</button>
+      <button id="sunsetBtn" type="button">🌇 黄昏</button>
+      <button id="nightBtn" class="active" type="button">🌙 夜晚</button>
+    </div>
+  </section>
+
+  <section class="bottom-panel">
+    <div class="now">
+      <div>
+        <div class="now-title" id="nowTitle">雨夜 · 小雨与轻柔氛围</div>
+        <div class="now-sub">首次播放必须手动点击</div>
+      </div>
+      <button class="play" id="playBtn" type="button">▶ 开启声音</button>
+    </div>
+
+    <div class="tools">
+      <button class="tool" id="mixerBtn" type="button">🎚 混音器</button>
+      <button class="tool" id="timerBtn" type="button">⏱ 专注计时</button>
+      <button class="tool" id="presetBtn" type="button">✨ 智能配乐</button>
+    </div>
+
+    <div class="drawer" id="mixer">
+      <div class="track">
+        <label>环境主声</label>
+        <button class="toggle on" data-track="main" type="button">开</button>
+        <input id="mainVol" type="range" min="0" max="1" step=".01" value=".55">
+      </div>
+      <div class="track">
+        <label>雷声</label>
+        <button class="toggle on" data-track="thunder" type="button">开</button>
+        <input id="thunderVol" type="range" min="0" max="1" step=".01" value=".22">
+      </div>
+      <div class="track">
+        <label>壁炉</label>
+        <button class="toggle on" data-track="fire" type="button">开</button>
+        <input id="fireVol" type="range" min="0" max="1" step=".01" value=".28">
+      </div>
+      <div class="track">
+        <label>背景音乐</label>
+        <button class="toggle on" data-track="music" type="button">开</button>
+        <input id="musicVol" type="range" min="0" max="1" step=".01" value=".18">
+      </div>
+    </div>
+
+    <div class="timer" id="timerPanel">
+      <div class="now-sub">结束后声音自动渐弱停止</div>
+      <div class="timer-display" id="timerDisplay">25:00</div>
+      <div class="timer-actions">
+        <button type="button" data-min="15">15分钟</button>
+        <button type="button" data-min="25">25分钟</button>
+        <button type="button" data-min="45">45分钟</button>
+        <button type="button" id="timerStart">开始</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="notice" id="notice">提示</div>
+</main>
+
+<audio id="rainLight" src="audio/rain_light.mp3" loop preload="metadata"></audio>
+<audio id="rainHeavy" src="audio/rain_heavy.mp3" loop preload="metadata"></audio>
+<audio id="snowWind" src="audio/snow_wind.mp3" loop preload="metadata"></audio>
+<audio id="thunderAudio" src="audio/thunder.mp3" loop preload="metadata"></audio>
+<audio id="fireAudio" src="audio/fireplace.mp3" loop preload="metadata"></audio>
+<audio id="musicAudio" src="audio/ambient_soft.mp3" loop preload="metadata"></audio>
+
+<script>
+(function(){
+  "use strict";
+
+  function $(id){return document.getElementById(id)}
+
+  var scene=$("scene");
+  var particles=$("particles");
+  var mode="rain";
+  var timeMode="night";
+  var playing=false;
+  var muted=false;
+  var lightningTimer=null;
+  var presetIndex=0;
+
+  var timerSeconds=1500;
+  var timerRunning=false;
+  var timerInterval=null;
+
+  var enabled={
+    main:true,
+    thunder:true,
+    fire:true,
+    music:true
+  };
+
+  var audio={
+    rainLight:$("rainLight"),
+    rainHeavy:$("rainHeavy"),
+    snowWind:$("snowWind"),
+    thunder:$("thunderAudio"),
+    fire:$("fireAudio"),
+    music:$("musicAudio")
+  };
+
+  function showNotice(text){
+    $("notice").textContent=text;
+    $("notice").classList.add("show");
+    clearTimeout(showNotice.timer);
+    showNotice.timer=setTimeout(function(){
+      $("notice").classList.remove("show");
+    },1600);
+  }
+
+  function makeStars(){
+    var box=$("stars");
+    var i,s;
+    box.innerHTML="";
+    for(i=0;i<65;i++){
+      s=document.createElement("i");
+      s.className="star";
+      s.style.left=(Math.random()*100)+"%";
+      s.style.top=(Math.random()*68)+"%";
+      s.style.animationDelay=(-Math.random()*3)+"s";
+      box.appendChild(s);
+    }
+  }
+
+  function makeRain(){
+    var count=window.innerWidth<600?95:155;
+    var i,d;
+    particles.innerHTML="";
+    for(i=0;i<count;i++){
+      d=document.createElement("i");
+      d.className="drop";
+      d.style.left=(Math.random()*100)+"%";
+      d.style.animationDuration=(0.5+Math.random()*0.7)+"s";
+      d.style.animationDelay=(-Math.random()*2)+"s";
+      d.style.opacity=(0.25+Math.random()*0.75);
+      d.style.height=(12+Math.random()*30)+"px";
+      particles.appendChild(d);
+    }
+  }
+
+  function makeSnow(){
+    var count=window.innerWidth<600?58:92;
+    var symbols=["❄","•","✦"];
+    var i,f;
+    particles.innerHTML="";
+    for(i=0;i<count;i++){
+      f=document.createElement("i");
+      f.className="flake";
+      f.textContent=symbols[Math.floor(Math.random()*symbols.length)];
+      f.style.left=(Math.random()*100)+"%";
+      f.style.fontSize=(8+Math.random()*16)+"px";
+      f.style.animationDuration=(5+Math.random()*8)+"s";
+      f.style.animationDelay=(-Math.random()*10)+"s";
+      f.style.opacity=(0.45+Math.random()*0.55);
+      particles.appendChild(f);
+    }
+  }
+
+  function scheduleLightning(){
+    clearTimeout(lightningTimer);
+    if(mode!=="rain"){return}
+    lightningTimer=setTimeout(function(){
+      scene.classList.remove("flash");
+      void scene.offsetWidth;
+      scene.classList.add("flash");
+      scheduleLightning();
+    },4500+Math.random()*7000);
+  }
+
+  function updateLabels(){
+    var timeName={day:"白天",sunset:"黄昏",night:"夜晚"}[timeMode];
+    $("sceneText").textContent=(mode==="rain"?"雨":"雪")+timeName+"山居 · 沉浸式环境空间";
+
+    if(mode==="rain"){
+      $("nowTitle").textContent=timeMode==="night"
+        ?"雨夜 · 小雨、雷声与轻柔氛围"
+        :"雨景 · 自然雨声与轻柔氛围";
+    }else{
+      $("nowTitle").textContent=timeMode==="night"
+        ?"雪夜 · 风声、壁炉与轻柔氛围"
+        :"雪景 · 风雪与木屋壁炉";
+    }
+  }
+
+  function setMode(next){
+    mode=next;
+    scene.classList.remove("rain","snow","flash");
+    scene.classList.add(mode,timeMode);
+
+    $("rainBtn").classList.toggle("active",mode==="rain");
+    $("snowBtn").classList.toggle("active",mode==="snow");
+
+    if(mode==="rain"){
+      makeRain();
+      scheduleLightning();
+    }else{
+      makeSnow();
+      clearTimeout(lightningTimer);
+    }
+
+    updateLabels();
+    if(playing){applyAudio(true)}
+  }
+
+  function setTime(next){
+    timeMode=next;
+    scene.classList.remove("day","sunset","night");
+    scene.classList.add(timeMode);
+
+    $("dayBtn").classList.toggle("active",timeMode==="day");
+    $("sunsetBtn").classList.toggle("active",timeMode==="sunset");
+    $("nightBtn").classList.toggle("active",timeMode==="night");
+
+    updateLabels();
+    if(playing){applyAudio(true)}
+  }
+
+  function setVolumes(){
+    audio.rainLight.volume=Number($("mainVol").value);
+    audio.rainHeavy.volume=Math.min(1,Number($("mainVol").value)*0.92);
+    audio.snowWind.volume=Math.min(1,Number($("mainVol").value)*0.82);
+    audio.thunder.volume=Number($("thunderVol").value);
+    audio.fire.volume=Number($("fireVol").value);
+    audio.music.volume=Number($("musicVol").value);
+
+    Object.keys(audio).forEach(function(key){
+      audio[key].muted=muted;
+    });
+  }
+
+  function stopAll(reset){
+    Object.keys(audio).forEach(function(key){
+      audio[key].pause();
+      if(reset){
+        try{audio[key].currentTime=0}catch(error){}
+      }
+    });
+  }
+
+  function tryPlay(item){
+    var promise;
+    try{
+      promise=item.play();
+      if(promise && typeof promise.catch==="function"){
+        promise.catch(function(){
+          showNotice("请再次点击“开启声音”");
+        });
+      }
+    }catch(error){
+      showNotice("音频暂时无法播放");
+    }
+  }
+
+  function applyAudio(reset){
+    setVolumes();
+    stopAll(reset);
+
+    if(!playing){return}
+
+    if(mode==="rain"){
+      if(enabled.main){
+        tryPlay(timeMode==="day"?audio.rainHeavy:audio.rainLight);
+      }
+      if(enabled.thunder){tryPlay(audio.thunder)}
+      if(enabled.music){tryPlay(audio.music)}
+      if(enabled.fire && timeMode==="night"){tryPlay(audio.fire)}
+    }else{
+      if(enabled.main){tryPlay(audio.snowWind)}
+      if(enabled.fire){tryPlay(audio.fire)}
+      if(enabled.music){tryPlay(audio.music)}
+    }
+  }
+
+  function togglePlay(){
+    playing=!playing;
+    $("playBtn").textContent=playing?"Ⅱ 暂停声音":"▶ 开启声音";
+
+    if(playing){
+      applyAudio(false);
+      showNotice("声音已开启");
+    }else{
+      stopAll(false);
+      showNotice("声音已暂停");
+    }
+  }
+
+  function toggleMute(){
+    muted=!muted;
+    setVolumes();
+    $("muteBtn").textContent=muted?"🔇":"🔊";
+    showNotice(muted?"已静音":"已恢复声音");
+  }
+
+  function smartPreset(){
+    var presets=[
+      {name:"轻柔陪伴",main:.48,thunder:.10,fire:.24,music:.16},
+      {name:"深度专注",main:.62,thunder:.04,fire:.18,music:.08},
+      {name:"沉浸电影感",main:.56,thunder:.34,fire:.30,music:.24},
+      {name:"纯自然声",main:.62,thunder:.18,fire:.25,music:0}
+    ];
+
+    var p=presets[presetIndex%presets.length];
+    presetIndex++;
+
+    $("mainVol").value=p.main;
+    $("thunderVol").value=p.thunder;
+    $("fireVol").value=p.fire;
+    $("musicVol").value=p.music;
+
+    enabled.music=p.music>0;
+    updateToggleButton(document.querySelector('[data-track="music"]'),enabled.music);
+
+    setVolumes();
+    if(playing){applyAudio(true)}
+    showNotice("已切换："+p.name);
+  }
+
+  function updateToggleButton(button,on){
+    button.classList.toggle("on",on);
+    button.textContent=on?"开":"关";
+  }
+
+  function renderTimer(){
+    var m=String(Math.floor(timerSeconds/60)).padStart(2,"0");
+    var s=String(timerSeconds%60).padStart(2,"0");
+    $("timerDisplay").textContent=m+":"+s;
+  }
+
+  function fadeOut(){
+    var steps=20;
+    var current=0;
+    var original={};
+
+    Object.keys(audio).forEach(function(key){
+      original[key]=audio[key].volume;
+    });
+
+    var fade=setInterval(function(){
+      current++;
+      var factor=Math.max(0,1-current/steps);
+
+      Object.keys(audio).forEach(function(key){
+        audio[key].volume=original[key]*factor;
+      });
+
+      if(current>=steps){
+        clearInterval(fade);
+        stopAll(false);
+        playing=false;
+        $("playBtn").textContent="▶ 开启声音";
+        setVolumes();
+      }
+    },120);
+  }
+
+  function toggleTimer(){
+    if(timerRunning){
+      clearInterval(timerInterval);
+      timerRunning=false;
+      $("timerStart").textContent="继续";
+      return;
+    }
+
+    timerRunning=true;
+    $("timerStart").textContent="暂停";
+
+    timerInterval=setInterval(function(){
+      timerSeconds--;
+      renderTimer();
+
+      if(timerSeconds<=0){
+        clearInterval(timerInterval);
+        timerRunning=false;
+        $("timerStart").textContent="开始";
+        fadeOut();
+        showNotice("专注时间结束");
+      }
+    },1000);
+  }
+
+  $("rainBtn").addEventListener("click",function(){setMode("rain")});
+  $("snowBtn").addEventListener("click",function(){setMode("snow")});
+  $("dayBtn").addEventListener("click",function(){setTime("day")});
+  $("sunsetBtn").addEventListener("click",function(){setTime("sunset")});
+  $("nightBtn").addEventListener("click",function(){setTime("night")});
+
+  $("playBtn").addEventListener("click",togglePlay);
+  $("muteBtn").addEventListener("click",toggleMute);
+  $("mixerBtn").addEventListener("click",function(){
+    $("mixer").classList.toggle("open");
+  });
+  $("timerBtn").addEventListener("click",function(){
+    $("timerPanel").classList.toggle("open");
+  });
+  $("presetBtn").addEventListener("click",smartPreset);
+
+  ["mainVol","thunderVol","fireVol","musicVol"].forEach(function(id){
+    $(id).addEventListener("input",setVolumes);
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll(".toggle"),function(button){
+    button.addEventListener("click",function(){
+      var key=button.getAttribute("data-track");
+      enabled[key]=!enabled[key];
+      updateToggleButton(button,enabled[key]);
+      if(playing){applyAudio(true)}
+    });
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll("[data-min]"),function(button){
+    button.addEventListener("click",function(){
+      timerSeconds=Number(button.getAttribute("data-min"))*60;
+      renderTimer();
+      showNotice("已设定 "+button.getAttribute("data-min")+" 分钟");
+    });
+  });
+
+  $("timerStart").addEventListener("click",toggleTimer);
+
+  window.addEventListener("resize",function(){
+    if(mode==="rain"){makeRain()}else{makeSnow()}
+  });
+
+  makeStars();
+  makeRain();
+  scheduleLightning();
+  setVolumes();
+  renderTimer();
+  updateLabels();
+})();
+</script>
+</body>
+</html>
